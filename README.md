@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Document Refinement Pipeline
 
-## Getting Started
+AI-powered document editing through a pipeline of independent agents. Each agent operates in a fresh context (separate API call), providing genuinely independent feedback rather than "yes, and..." responses.
 
-First, run the development server:
+## How It Works
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. **Paste your document** - Add any document and optionally specify a goal
+2. **Editors review** - Three independent editors (Skeptic, BeSci, Clarity) critique in parallel
+3. **You decide** - Accept, reject, or edit each piece of feedback
+4. **Document revises** - Changes are applied, then a Voice Pass makes it sound like you
+5. **Buyers react** - Four buyer personas (CEO, CPO, CRO, Head CX) read cold and respond
+6. **Loop or done** - Start another round or let it cook autonomously
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Agents
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Editors (run in parallel)
+- **Skeptic**: Looks for holes, unclear claims, wandering structure
+- **BeSci**: Checks behavioral science accuracy and theoretical grounding
+- **Clarity**: Focuses on flow, readability, and what can be cut
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Buyers (run in parallel)
+- **CEO**: Strategic lens - "Does this change how we compete?"
+- **CPO**: Product lens - "Can I use this? What's the lift to adopt?"
+- **CRO**: Research lens - "Is this rigorous? Will it hold up?"
+- **Head of CX**: Practical lens - "Does this solve a problem we actually have?"
 
-## Learn More
+## Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repo
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set your Anthropic API key:
+   ```bash
+   # Create .env.local
+   ANTHROPIC_API_KEY=your_key_here
+   ```
+4. Run the dev server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+For Vercel/GitHub deployment, add `ANTHROPIC_API_KEY` as an environment variable/secret.
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 with App Router
+- TypeScript
+- Tailwind CSS
+- Claude API (Sonnet 4)
