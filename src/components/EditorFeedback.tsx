@@ -33,7 +33,9 @@ export function EditorFeedbackPanel({
   onHighlight,
 }: EditorFeedbackProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [responseText, setResponseText] = useState('');
   const [userNotes, setUserNotes] = useState('');
   const [showNotesInput, setShowNotesInput] = useState(false);
 
@@ -51,7 +53,14 @@ export function EditorFeedbackPanel({
 
   const handleEdit = (id: string, currentSuggestion?: string) => {
     setEditingId(id);
+    setRespondingId(null);
     setEditText(currentSuggestion || '');
+  };
+
+  const handleRespond = (id: string, currentResponse?: string) => {
+    setRespondingId(id);
+    setEditingId(null);
+    setResponseText(currentResponse || '');
   };
 
   const handleSaveEdit = (id: string) => {
@@ -64,15 +73,36 @@ export function EditorFeedbackPanel({
     setEditText('');
   };
 
+  const handleSaveResponse = (id: string) => {
+    onFeedbackUpdate(
+      feedback.map((f) =>
+        f.id === id ? { ...f, status: 'responded', userResponse: responseText } : f
+      )
+    );
+    setRespondingId(null);
+    setResponseText('');
+  };
+
   const pendingCount = feedback.filter((f) => f.status === 'pending').length;
   const acceptedCount = feedback.filter(
-    (f) => f.status === 'accepted' || f.status === 'edited'
+    (f) => f.status === 'accepted' || f.status === 'edited' || f.status === 'responded'
   ).length;
 
   const groupedFeedback = {
     skeptic: feedback.filter((f) => f.editor === 'skeptic'),
     besci: feedback.filter((f) => f.editor === 'besci'),
     clarity: feedback.filter((f) => f.editor === 'clarity'),
+  };
+
+  const getStatusBadge = (status: EditorFeedbackType['status']) => {
+    switch (status) {
+      case 'rejected':
+        return 'bg-red-100 text-red-600';
+      case 'responded':
+        return 'bg-blue-100 text-blue-600';
+      default:
+        return 'bg-green-100 text-green-600';
+    }
   };
 
   return (
@@ -82,7 +112,7 @@ export function EditorFeedbackPanel({
           <h3 className="text-sm font-medium text-gray-700">Editor Feedback</h3>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-gray-500">{pendingCount} pending</span>
-            <span className="text-green-600">{acceptedCount} accepted</span>
+            <span className="text-green-600">{acceptedCount} actionable</span>
           </div>
         </div>
 
@@ -140,7 +170,9 @@ export function EditorFeedbackPanel({
                     className={`
                       p-3 rounded-lg border transition-all
                       ${item.status === 'rejected' ? 'opacity-50' : ''}
-                      ${item.status === 'accepted' || item.status === 'edited' ? 'border-green-300 bg-green-50' : `${colors.bg} ${colors.border}`}
+                      ${item.status === 'accepted' || item.status === 'edited' ? 'border-green-300 bg-green-50' : ''}
+                      ${item.status === 'responded' ? 'border-blue-300 bg-blue-50' : ''}
+                      ${item.status === 'pending' ? `${colors.bg} ${colors.border}` : ''}
                     `}
                     onMouseEnter={() => onHighlight([item.location])}
                     onMouseLeave={() => onHighlight([])}
@@ -174,22 +206,25 @@ export function EditorFeedbackPanel({
                           <button
                             onClick={() => handleEdit(item.id, item.suggestion)}
                             className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                            title="Edit"
+                            title="Edit suggestion"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </button>
+                          <button
+                            onClick={() => handleRespond(item.id, item.userResponse)}
+                            className="p-1 text-purple-600 hover:bg-purple-100 rounded"
+                            title="Respond with context"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </button>
                         </div>
                       )}
                       {item.status !== 'pending' && (
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded ${
-                            item.status === 'rejected'
-                              ? 'bg-red-100 text-red-600'
-                              : 'bg-green-100 text-green-600'
-                          }`}
-                        >
+                        <span className={`text-xs px-2 py-0.5 rounded ${getStatusBadge(item.status)}`}>
                           {item.status}
                         </span>
                       )}
@@ -200,7 +235,8 @@ export function EditorFeedbackPanel({
                     </p>
                     <p className="text-sm text-gray-700 mb-2">{item.issue}</p>
 
-                    {editingId === item.id ? (
+                    {/* Edit mode */}
+                    {editingId === item.id && (
                       <div className="mt-2">
                         <textarea
                           value={editText}
@@ -214,7 +250,7 @@ export function EditorFeedbackPanel({
                             onClick={() => handleSaveEdit(item.id)}
                             className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
                           >
-                            Save
+                            Save & Accept
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
@@ -224,12 +260,51 @@ export function EditorFeedbackPanel({
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      item.suggestion && (
-                        <p className="text-sm text-gray-500 italic">
-                          Suggestion: {item.userEdit || item.suggestion}
+                    )}
+
+                    {/* Respond mode */}
+                    {respondingId === item.id && (
+                      <div className="mt-2">
+                        <p className="text-xs text-purple-600 mb-1 font-medium">
+                          Provide context or push back - this will be passed to the revision agent:
                         </p>
-                      )
+                        <textarea
+                          value={responseText}
+                          onChange={(e) => setResponseText(e.target.value)}
+                          className="w-full p-2 text-sm border border-purple-200 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none bg-purple-50"
+                          rows={3}
+                          placeholder="e.g., 'This is intentional because...' or 'The context here is...' or 'I disagree because...'"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleSaveResponse(item.id)}
+                            className="px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
+                          >
+                            Save Response
+                          </button>
+                          <button
+                            onClick={() => setRespondingId(null)}
+                            className="px-3 py-1 text-xs text-gray-500 hover:text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show saved response */}
+                    {item.userResponse && respondingId !== item.id && (
+                      <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded">
+                        <p className="text-xs text-purple-600 font-medium mb-1">Your response:</p>
+                        <p className="text-sm text-purple-800 italic">{item.userResponse}</p>
+                      </div>
+                    )}
+
+                    {/* Show suggestion or edit (when not editing) */}
+                    {editingId !== item.id && respondingId !== item.id && item.suggestion && !item.userResponse && (
+                      <p className="text-sm text-gray-500 italic">
+                        Suggestion: {item.userEdit || item.suggestion}
+                      </p>
                     )}
                   </div>
                 ))}
@@ -254,7 +329,7 @@ export function EditorFeedbackPanel({
               Processing...
             </span>
           ) : (
-            `Continue with ${acceptedCount} accepted items`
+            `Continue with ${acceptedCount} actionable items`
           )}
         </button>
       </div>

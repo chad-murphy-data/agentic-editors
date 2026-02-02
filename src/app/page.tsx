@@ -6,6 +6,7 @@ import { PipelineTracker } from '@/components/PipelineTracker';
 import { DocumentViewer } from '@/components/DocumentViewer';
 import { EditorFeedbackPanel } from '@/components/EditorFeedback';
 import { BuyerPanel } from '@/components/BuyerPanel';
+import { DiffViewer } from '@/components/DiffViewer';
 
 export default function Home() {
   const {
@@ -192,15 +193,20 @@ export default function Home() {
       );
     }
 
-    // Synthesis stage - show buyers and final document
+    // Synthesis stage - show buyers and diff view
     if (state.currentStage === 'synthesis' && currentRound) {
+      const finalDocument = currentRound.voicePassedDocument || currentRound.revisedDocument || '';
+      const originalDocument = currentRound.inputDocument;
+
       return (
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           <div className="flex-1 grid grid-cols-2 gap-4 min-h-0">
             <div className="min-h-0 overflow-auto">
-              <DocumentViewer
-                document={currentRound.voicePassedDocument || currentRound.revisedDocument || ''}
-                label="Final Document"
+              <DiffViewer
+                original={originalDocument}
+                revised={finalDocument}
+                originalLabel="Original (this round)"
+                revisedLabel="After revision + voice pass"
               />
             </div>
             <div className="min-h-0 overflow-auto">

@@ -15,8 +15,9 @@ export interface EditorFeedback {
   issue: string;
   suggestion?: string;
   severity: 'high' | 'medium' | 'low';
-  status: 'pending' | 'accepted' | 'rejected' | 'edited';
+  status: 'pending' | 'accepted' | 'rejected' | 'edited' | 'responded';
   userEdit?: string;
+  userResponse?: string;
 }
 
 // Buyer reaction structure

@@ -160,7 +160,7 @@ export function usePipeline() {
     try {
       const currentRound = state.rounds[state.currentRound - 1];
       const acceptedFeedback = currentRound.editorFeedback.filter(
-        (f) => f.status === 'accepted' || f.status === 'edited'
+        (f) => f.status === 'accepted' || f.status === 'edited' || f.status === 'responded'
       );
 
       // Run revision

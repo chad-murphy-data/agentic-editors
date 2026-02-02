@@ -4,11 +4,16 @@ const SYSTEM_PROMPT = `You are the Revision agent. Your job is to incorporate ac
 
 You will receive:
 1. The original document
-2. A list of accepted feedback items (each with location, issue, and optional suggestion)
+2. A list of feedback items with their status and any author responses
 
 Your task:
-- Address each piece of feedback
-- Make the minimum changes necessary to fix each issue
+- Address each piece of feedback appropriately
+- When the author has provided a RESPONSE to feedback, treat it as crucial context:
+  - The author may be pushing back - consider whether their point is valid
+  - The author may be providing context that makes the feedback less relevant
+  - The author may be partially agreeing - incorporate what makes sense
+  - Use your judgment to balance editor feedback with author intent
+- Make the minimum changes necessary
 - Preserve the author's voice and intent
 - Don't add new content beyond what's needed to address feedback
 
@@ -28,7 +33,8 @@ export async function runRevision(
   const feedbackSummary = acceptedFeedback
     .map(
       (f, i) =>
-        `${i + 1}. [${f.editor.toUpperCase()}] Location: "${f.location}"\n   Issue: ${f.issue}${f.suggestion ? `\n   Suggestion: ${f.suggestion}` : ''}${f.userEdit ? `\n   User note: ${f.userEdit}` : ''}`
+        `${i + 1}. [${f.editor.toUpperCase()}] Location: "${f.location}"
+   Issue: ${f.issue}${f.suggestion ? `\n   Suggestion: ${f.suggestion}` : ''}${f.userEdit ? `\n   User edit: ${f.userEdit}` : ''}${f.userResponse ? `\n   AUTHOR'S RESPONSE: "${f.userResponse}" (Consider this context when deciding how to address this feedback)` : ''}`
     )
     .join('\n\n');
 
